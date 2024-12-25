@@ -19,7 +19,7 @@ steps:
     args:
       - "cp"
       - "index.html"
-      - "gs://$(if [ \"${BRANCH_NAME}\" == \"dev\" ]; then echo dev-bucket; elif [ \"${BRANCH_NAME}\" == \"test\" ]; then echo test-bucket; elif [ \"${BRANCH_NAME}\" == \"prod\" ]; then echo prod-bucket; fi)"
+      - "gs://$(if [ \"${BRANCH_NAME}\" == \"dev\" ]; then echo my-dev-bucket-eu; elif [ \"${BRANCH_NAME}\" == \"test\" ]; then echo my-test-bucket-eu; elif [ \"${BRANCH_NAME}\" == \"prod\" ]; then echo my-prod-bucket-eu; fi)"
     waitFor: ["set-project"]
     env:
       - "BRANCH_NAME=${BRANCH_NAME}"
