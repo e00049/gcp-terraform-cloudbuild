@@ -1,10 +1,30 @@
-options: 
+options:
   logging: CLOUD_LOGGING_ONLY  
 
 steps:
   - name: "ubuntu"
     args:
       - echo
-      - "hello world"
+      - "Checking the branch and deploying the index.html file"
+  
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "config"
+      - "set"
+      - "project"
+      - "${_PROJECT_ID}"  
+    id: "set-project"
+  
+  - name: "gcr.io/cloud-builders/gsutil"
+    args:
+      - "cp"
+      - "index.html"
+      - "gs://$(if [ \"${BRANCH_NAME}\" == \"dev\" ]; then echo dev-bucket; elif [ \"${BRANCH_NAME}\" == \"test\" ]; then echo test-bucket; elif [ \"${BRANCH_NAME}\" == \"prod\" ]; then echo prod-bucket; fi)"
+    waitFor: ["set-project"]
+    env:
+      - "BRANCH_NAME=${BRANCH_NAME}"
+      - "DEV_PROJECT_ID=e00049-development-project" 
+      - "TEST_PROJECT_ID=e00049-development-project"
+      - "PROD_PROJECT_ID=e00049-development-project"
 
-timeout: "900s" 
+timeout: "900s"
