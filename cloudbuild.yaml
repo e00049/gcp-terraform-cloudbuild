@@ -8,5 +8,3 @@ steps:
       - "hello world"
 
 timeout: "600s" 
-
-
