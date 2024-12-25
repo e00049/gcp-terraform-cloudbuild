@@ -1,30 +1,47 @@
 options:
-  logging: CLOUD_LOGGING_ONLY  
+  logging: CLOUD_LOGGING_ONLY
 
 steps:
-  - name: "ubuntu"
+  - name: gcr.io/cloud-builders/git
     args:
-      - echo
-      - "Checking the branch and deploying the index.html file"
-  
-  - name: "gcr.io/cloud-builders/gcloud"
-    args:
-      - "config"
-      - "set"
-      - "project"
-      - "${_PROJECT_ID}"  
-    id: "set-project"
-  
-  - name: "gcr.io/cloud-builders/gsutil"
-    args:
-      - "cp"
-      - "index.html"
-      - "gs://$(if [ \"${BRANCH_NAME}\" == \"dev\" ]; then echo my-dev-bucket-eu; elif [ \"${BRANCH_NAME}\" == \"test\" ]; then echo my-test-bucket-eu; elif [ \"${BRANCH_NAME}\" == \"prod\" ]; then echo my-prod-bucket-eu; fi)"
-    waitFor: ["set-project"]
-    env:
-      - "BRANCH_NAME=${BRANCH_NAME}"
-      - "DEV_PROJECT_ID=e00049-development-project" 
-      - "TEST_PROJECT_ID=e00049-development-project"
-      - "PROD_PROJECT_ID=e00049-development-project"
+      - clone
+      - 'https://github.com/e00049/gcp-terraform-cloudbuild.git'
 
-timeout: "900s"
+  - name: alpine
+    args:
+      - /bin/sh
+      - '-c'
+      - |
+        echo "The BRANCH_NAME is: $BRANCH_NAME"
+        echo "List of environment variables:"
+        printenv
+    id: Check Branch Name
+
+  - name: gcr.io/cloud-builders/gsutil
+    args:
+      - '-c'
+      - |
+        echo "Deploying index.html based on branch..."
+        if [[ "$BRANCH_NAME" == "dev" ]]; then
+          echo "Deploying to Dev Bucket"
+          gsutil cp index.html gs://my-dev-bucket-eu/
+        elif [[ "$BRANCH_NAME" == "test" ]]; then
+          echo "Deploying to Test Bucket"
+          gsutil cp index.html gs://my-test-bucket-eu/
+        elif [[ "$BRANCH_NAME" == "prod" ]]; then
+          echo "Deploying to Prod Bucket"
+          gsutil cp index.html gs://my-prod-bucket-eu/
+        else
+          echo "No matching branch found. Skipping deployment."
+        fi
+    id: Deploy to Correct Bucket
+    waitFor:
+      - Check Branch Name
+    entrypoint: /bin/bash
+
+timeout: 1200s
+
+substitutions:
+  _DEV_BUCKET: 'gs://my-dev-bucket-eu'
+  _TEST_BUCKET: 'gs://my-test-bucket-eu'
+  _PROD_BUCKET: 'gs://my-prod-bucket-eu'
