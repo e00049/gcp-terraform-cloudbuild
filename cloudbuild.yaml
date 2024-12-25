@@ -1,4 +1,4 @@
-options:
+options: 
   logging: CLOUD_LOGGING_ONLY  
 
 steps:
@@ -7,4 +7,4 @@ steps:
       - echo
       - "hello world"
 
-timeout: "600s" 
+timeout: "900s" 
